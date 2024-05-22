@@ -611,6 +611,9 @@ impl<T> OnceCell<T> {
                     //
                     // We need to wait the initialization to complete.
                     if let Some(listener) = event_listener.take() {
+                        // Try to work around https://github.com/smol-rs/async-lock/issues/84
+                        #[cfg(target_arch = "xtensa")]
+                        let _ = core::borrow::Borrow::borrow(&listener);
                         strategy.wait(listener).await;
                     } else {
                         event_listener = Some(self.active_initializers.listen());
